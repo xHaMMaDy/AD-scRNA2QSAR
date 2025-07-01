@@ -95,7 +95,7 @@ AlzheimerDisease_FromSingleCell/
 │   ├── Ligand_Final.ipynb
 │   ├── app.py
 │   └── requirements.txt
-├── Data/                      # 📊 Raw & derived datasets
+├── Data/                      # A large-scale analysis of over 500,000 cells was performed. A 25,000-cell subset (5,000 from each study) is provided on GitHub for convenience.
 │   └── 25K_Sample.rds
 └── README.md
 ```
@@ -141,8 +141,8 @@ BiocManager::install(c("SingleCellExperiment", "miloR", "glmGamPoi"))
 (Required for `QSAR` modeling and the `Flask` API)
 ```bash
 # Clone the repository
-git clone [https://github.com/xhammady/AlzheimerDisease_FromSingleCell.git](https://github.com/xhammady/AlzheimerDisease_FromSingleCell.git)
-cd AlzheimerDisease_FromSingleCell
+git clone [https://github.com/xhammady/AD-scRNA2QSAR.git](https://github.com/xhammady/AD-scRNA2QSAR.git)
+cd AD-scRNA2QSAR
 
 # Install Python packages from requirements.txt
 pip install -r QSAR/requirements.txt
