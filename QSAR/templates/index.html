@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Target Alzheimer's Drug Screening</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100%22><text y=%22.9em%22 font-size=%2290%22>🧬</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/smiles-drawer@2.0.1/dist/smiles-drawer.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #111827;
+            --glass-bg: rgba(31, 41, 55, 0.5);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-color: #F9FAFB;
+            --header-color: #E5E7EB;
+            --primary-color: #38BDF8;
+            --primary-hover: #7DD3FC;
+            --success-color: #4ADE80;
+            --danger-color: #F87171;
+            --warning-color: #FBBF24;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --backdrop-blur: 10px;
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-body: 'Roboto Mono', monospace;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(at 20% 20%, hsla(212,96%,61%,0.2) 0px, transparent 50%),
+                radial-gradient(at 80% 20%, hsla(289,96%,61%,0.2) 0px, transparent 50%),
+                radial-gradient(at 20% 80%, hsla(33,96%,61%,0.2) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, hsla(180,96%,61%,0.2) 0px, transparent 50%);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            background-size: 400% 400%;
+            animation: gradient-animation 30s ease infinite;
+        }
+
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(var(--backdrop-blur));
+            -webkit-backdrop-filter: blur(var(--backdrop-blur));
+        }
+        header {
+            padding: 2.5rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        header h1 {
+            font-family: var(--font-heading);
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+        header p { font-size: 1rem; color: var(--header-color); opacity: 0.8; }
+        .main-content { padding: 2rem; }
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            color: var(--header-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+        }
+        h3 {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .input-group { margin-bottom: 1.5rem; }
+        label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--header-color); }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: rgba(17, 24, 39, 0.7);
+            color: var(--text-color);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input[type="text"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.3);
+        }
+        button {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: var(--font-heading);
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        button:hover { background-color: var(--primary-hover); transform: translateY(-2px); }
+        button:disabled { background-color: #4B5563; color: #9CA3AF; cursor: not-allowed; transform: none; }
+        
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .results-section, .batch-results-section {
+            margin-top: 2rem;
+            background-color: rgba(17, 24, 39, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .result-card, .error-card, .mini-result-card {
+            background: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-left: 5px solid;
+            text-align: left;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .result-card:hover, .error-card:hover, .mini-result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-card.active { border-left-color: var(--success-color); }
+        .result-card.inactive { border-left-color: var(--danger-color); }
+        .error-card { border-left-color: var(--warning-color); }
+        
+        /* Tab Styling */
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+        .tab-buttons button {
+            background-color: transparent;
+            color: var(--header-color);
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 1rem;
+            font-family: var(--font-heading);
+            border-radius: 8px 8px 0 0;
+            margin-top: 0;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-buttons button:hover {
+            background-color: var(--glass-bg);
+            color: var(--primary-color);
+        }
+        .tab-buttons button.active {
+            background-color: var(--glass-bg);
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+        .tab-pane {
+            display: none;
+            animation: fadeEffect 0.5s;
+        }
+        @keyframes fadeEffect {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+
+        #smiles-canvas-container {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: rgba(17, 24, 39, 0.5);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            min-height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .mini-canvas {
+            width: 100%;
+            height: 150px;
+            margin-top: 1rem;
+            background: rgba(17, 24, 39, 0.3);
+            border-radius: 6px;
+        }
+        
+        .batch-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .batch-controls .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .batch-controls label {
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+            opacity: 0.7;
+        }
+        .batch-controls button, .batch-controls select {
+            margin-top: 0;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--border-color);
+        }
+        .batch-controls button.active {
+            background: var(--primary-color);
+            color: var(--bg-color);
+            font-weight: 700;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--glass-bg);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        .history-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .history-item-main { flex-grow: 1; }
+        .history-item p { margin: 0; line-height: 1.4; }
+        .history-smiles { font-family: var(--font-body); font-weight: 700; }
+        .history-meta { font-size: 0.8rem; opacity: 0.7; }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .clear-history-btn {
+            background: var(--danger-color);
+            color: var(--bg-color);
+            border: none;
+        }
+
+        .custom-file-upload {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(17, 24, 39, 0.7);
+            padding: 5px;
+            cursor: pointer;
+        }
+        .custom-file-upload:hover { border-color: var(--primary-color); }
+        .custom-file-upload input[type="file"] { display: none; }
+        .file-upload-btn {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-family: var(--font-heading);
+            white-space: nowrap;
+            transition: background-color 0.3s;
+        }
+        .file-upload-btn:hover { background-color: var(--primary-hover); }
+        #file-name-display {
+            padding-left: 15px;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+        }
+        .example-btn {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            margin-top: 0;
+            font-size: 0.9rem;
+        }
+        .example-btn:hover { background: var(--primary-color); color: var(--bg-color); }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .team-member {
+            background: var(--glass-bg);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            text-align: left;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .team-member:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        .team-member-photo {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center 25%;
+            border: 2px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .team-member h4 {
+            font-family: var(--font-heading);
+            color: var(--primary-hover);
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+        .team-member p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            word-break: break-all;
+        }
+        .team-member-info {}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧬 Multi-Target Alzheimer's Drug Screening</h1>
+            <p>Predict compound bioactivity against Alzheimer's-related protein targets.</p>
+        </header>
+
+        <main class="main-content">
+            <div class="tab-buttons">
+                <button class="tab-link active" onclick="openTab(event, 'single-tab')">Single Compound</button>
+                <button class="tab-link" onclick="openTab(event, 'batch-tab')">Batch Prediction</button>
+                <button class="tab-link" onclick="openTab(event, 'history-tab')">History</button>
+                <button class="tab-link" onclick="openTab(event, 'about-tab')">About</button>
+            </div>
+
+            <div id="single-tab" class="tab-pane" style="display:block;">
+                <h2>Single Compound Prediction</h2>
+                <div class="input-group">
+                    <label for="smiles-input">Enter SMILES string:</label>
+                    <input type="text" id="smiles-input" placeholder="e.g., CCO or c1ccccc1CN">
+                </div>
+                <div id="smiles-canvas-container">
+                    <canvas id="smiles-canvas" width="500" height="250"></canvas>
+                </div>
+                <div class="input-group" style="margin-top: 1.5rem;">
+                    <label for="target-protein-select">Select Target Protein:</label>
+                    <select id="target-protein-select">
+                        <option value="All Targets">Full Disease Panel (All Targets)</option>
+                        <option value="MAO-B">MAO-B</option>
+                        <option value="COX-2">COX-2</option>
+                        <option value="VISFATIN">VISFATIN</option>
+                        <option value="BACE1">BACE1</option>
+                        <option value="AChE">AChE</option>
+                    </select>
+                </div>
+                <button onclick="predictSingle()" id="predict-btn">
+                    <span class="btn-text">⚡ Predict Activity</span>
+                    <span class="spinner" style="display: none;"></span>
+                </button>
+                <div style="margin-top: 1.5rem;">
+                    <h3>Try these examples:</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        <button onclick="setExample('Cc1cc2c(nn1)-c1cc(OCCCC(F)(F)F)ccc1C2=O', 'AChE')" class="example-btn">Example 1 (AChE)</button>
+                        <button onclick="setExample('O=C(O)c1cc(O)c(O)c(O)c1', 'COX-2')" class="example-btn">Example 2 (COX-2)</button>
+                    </div>
+                </div>
+                <div id="single-results-section" class="results-section" style="display: none;"></div>
+            </div>
+
+            <div id="batch-tab" class="tab-pane">
+                <h2>Batch Prediction</h2>
+                <div class="input-group">
+                    <label for="batch-smiles-input">Enter multiple SMILES (one per line) or Upload File:</label>
+                    <textarea id="batch-smiles-input" rows="5" placeholder="CCO..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="batch-file-input">Upload SMILES from file (.txt, .xls, .xlsx):</label>
+                    <div class="custom-file-upload">
+                        <input type="file" id="batch-file-input" accept=".txt,.xls,.xlsx" onchange="handleFileUpload(event)">
+                        <label for="batch-file-input" class="file-upload-btn">Choose File</label>
+                        <span id="file-name-display">No file chosen</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="batch-target-protein-select">Select Target Protein for Batch:</label>
+                    <select id="batch-target-protein-select">
+                        <option value="MAO-B">MAO-B</option>
+                        <option value="COX-2">COX-2</option>
+                        <option value="VISFATIN">VISFATIN</option>
+                        <option value="BACE1">BACE1</option>
+                        <option value="AChE">AChE</option>
+                    </select>
+                </div>
+                <button onclick="predictBatch()" id="batch-predict-btn">
+                    <span class="btn-text">📊 Batch Predict</span>
+                    <span class="spinner" style="display: none;"></span>
+                </button>
+                 <div class="batch-results-section" id="batch-results-section" style="display: none;">
+                    <h2>Batch Results</h2>
+                    <div class="batch-controls">
+                        <div class="control-group">
+                           <label>Filter by Status</label>
+                            <div>
+                                <button id="filter-all" class="active">All</button>
+                                <button id="filter-active">Active</button>
+                                <button id="filter-inactive">Inactive</button>
+                                <button id="filter-error">Errors</button>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                           <label for="sort-select">Sort by</label>
+                            <select id="sort-select">
+                                <option value="default">Default Order</option>
+                                <option value="confidence-desc">Confidence (High-Low)</option>
+                                <option value="confidence-asc">Confidence (Low-High)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="batch-results-content"></div>
+                </div>
+            </div>
+
+            <div id="history-tab" class="tab-pane">
+                <div class="history-header">
+                    <h2>Prediction History</h2>
+                    <button onclick="clearHistory()" class="clear-history-btn">Clear History</button>
+                </div>
+                <div id="history-content">
+                    <p>Your prediction history will appear here.</p>
+                </div>
+            </div>
+
+            <div id="about-tab" class="tab-pane">
+                <h2>About The Project</h2>
+                <p style="opacity: 0.9;">
+                    This tool leverages a machine learning model to predict the bioactivity of chemical compounds against key protein targets associated with Alzheimer's disease. By inputting a compound's SMILES string, researchers can get instantaneous feedback on its potential as an inhibitor, accelerating the early stages of drug discovery.
+                </p>
+                <h3>Our Mission</h3>
+                <p style="opacity: 0.9;">
+                    Our goal is to provide accessible, powerful, and intuitive computational tools to the scientific community. We believe that by democratizing access to predictive modeling, we can help lower the barriers to research and foster new discoveries in neurodegenerative disease.
+                </p>
+                <h3>Meet the Team</h3>
+                <div class="team-grid">
+                    <div class="team-member">
+                        <img src="images/ibrahim.jpg" alt="Photo of Ibrahim Abdelkarim Hammad" class="team-member-photo" onerror="this.src='https://placehold.co/70x70/313c4b/f9fafb?text=IAH'">
+                        <div class="team-member-info">
+                            <h4>Ibrahim Abdelkarim Hammad</h4>
+                            <p>I.Abdelkarim@nu.edu.eg</p>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="images/mira.jpg" alt="Photo of Mira Moheb Attia" class="team-member-photo" onerror="this.src='https://placehold.co/70x70/313c4b/f9fafb?text=MMA'">
+                        <div class="team-member-info">
+                            <h4>Mira Moheb Attia</h4>
+                            <p>m.moheb2119@nu.edu.eg</p>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="images/abdelrahman.jpg" alt="Photo of Abdelrahman Wagih" class="team-member-photo" onerror="this.src='https://placehold.co/70x70/313c4b/f9fafb?text=AW'">
+                        <div class="team-member-info">
+                            <h4>Abdelrahman Wagih</h4>
+                            <p>A.wagih2160@nu.edu.eg</p>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="images/reem.jpg" alt="Photo of Reem Sharaf EL-Deen Hassan" class="team-member-photo" onerror="this.src='https://placehold.co/70x70/313c4b/f9fafb?text=RSH'">
+                        <div class="team-member-info">
+                            <h4>Reem Sharaf EL-Deen Hassan</h4>
+                            <p>R.Sharaf2187@nu.edu.eg</p>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="images/lorance.jpg" alt="Photo of Lorance Gergis Labeeb" class="team-member-photo" onerror="this.src='https://placehold.co/70x70/313c4b/f9fafb?text=LGL'">
+                        <div class="team-member-info">
+                            <h4>Lorance Gergis Labeeb </h4>
+                            <p>l.gergis2184@nu.edu.eg</p>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="images/amr.jpg" alt="Photo of Mr/ Amr Mohamed ElHefnawy" class="team-member-photo" onerror="this.src='https://placehold.co/70x70/313c4b/f9fafb?text=AME'">
+                        <div class="team-member-info">
+                            <h4>Mr/ Amr Mohamed ElHefnawy</h4>
+                            <p>AAlhfnawy@nu.edu.eg</p>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <img src="images/sameh.jpg" alt="Photo of Dr/ Sameh Ibrahim Hassanien" class="team-member-photo" onerror="this.src='https://placehold.co/70x70/313c4b/f9fafb?text=SIH'">
+                        <div class="team-member-info">
+                            <h4>Dr/ Sameh Ibrahim Hassanien</h4>
+                            <p>SIbrahem@nu.edu.eg</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- Globals and Initializers ---
+        const API_URL = '/predict';
+        const BATCH_API_URL = '/predict_batch';
+        let currentBatchResults = [];
+        let currentFilter = 'all';
+        let currentSort = 'default';
+        let smilesDrawer = new SmilesDrawer.Drawer({ width: 500, height: 250, padding: 20 });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const smilesInput = document.getElementById('smiles-input');
+            smilesInput.addEventListener('input', () => drawSmiles(smilesInput.value, 'smiles-canvas'));
+            
+            document.getElementById('filter-all').addEventListener('click', () => setFilter('all'));
+            document.getElementById('filter-active').addEventListener('click', () => setFilter('active'));
+            document.getElementById('filter-inactive').addEventListener('click', () => setFilter('inactive'));
+            document.getElementById('filter-error').addEventListener('click', () => setFilter('error'));
+            document.getElementById('sort-select').addEventListener('change', (e) => setSort(e.target.value));
+
+            drawSmiles('', 'smiles-canvas');
+        });
+
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-pane");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tab-link");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+            
+            if (tabName === 'history-tab') {
+                renderHistory();
+            }
+        }
+        
+        function setExample(smiles, target) {
+            const smilesInput = document.getElementById('smiles-input');
+            smilesInput.value = smiles;
+            if (target) { 
+                document.getElementById('target-protein-select').value = target; 
+            }
+            drawSmiles(smiles, 'smiles-canvas');
+        }
+
+        function drawSmiles(smiles, canvasId, isMini = false) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            
+            let drawer = isMini ? new SmilesDrawer.Drawer({ width: 250, height: 150, padding: 10 }) : smilesDrawer;
+            
+            SmilesDrawer.parse(smiles, 
+                (tree) => {
+                    drawer.draw(tree, canvasId, 'dark', false);
+                },
+                (err) => {
+                    const context = canvas.getContext('2d');
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    context.font = "14px " + getComputedStyle(document.body).getPropertyValue('--font-body').trim();
+                    context.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    context.textAlign = 'center';
+                    context.fillText(smiles ? 'Invalid SMILES' : 'Enter a SMILES string to see the structure', canvas.width / 2, canvas.height / 2);
+                }
+            );
+        }
+        
+        async function predictSingle() {
+            const smilesInput = document.getElementById('smiles-input');
+            const targetSelect = document.getElementById('target-protein-select');
+            const resultsSection = document.getElementById('single-results-section');
+            const predictButton = document.getElementById('predict-btn');
+            const buttonText = predictButton.querySelector('.btn-text');
+            const spinner = predictButton.querySelector('.spinner');
+
+            const smiles = smilesInput.value.trim();
+            if (!smiles) { alert('Please enter a SMILES string.'); return; }
+
+            buttonText.textContent = 'Predicting...';
+            spinner.style.display = 'inline-block';
+            predictButton.disabled = true;
+            resultsSection.style.display = 'none';
+
+            try {
+                const payload = { smiles, target_protein: targetSelect.value };
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: `Server error: ${response.status}` }));
+                    throw new Error(errorData.error || `Server error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultsSection.innerHTML = `<div class="error-card"><h3>❌ Prediction Error</h3><p>${data.error}</p></div>`;
+                } else if (Array.isArray(data)) { // Handle "All Targets"
+                     let tableHtml = `<h3>Results for: ${smiles}</h3><table class="results-table" style="width:100%; border-collapse: collapse; margin-top: 1rem;"><thead><tr><th style="border: 1px solid var(--border-color); padding: 0.75rem;">Target</th><th style="border: 1px solid var(--border-color); padding: 0.75rem;">Prediction</th><th style="border: 1px solid var(--border-color); padding: 0.75rem;">Confidence</th></tr></thead><tbody>`;
+                    data.forEach(result => {
+                        const isActive = result.prediction === 'Active';
+                        tableHtml += `<tr><td style="border: 1px solid var(--border-color); padding: 0.75rem;">${result.target}</td><td style="border: 1px solid var(--border-color); padding: 0.75rem; color: var(--${isActive ? 'success' : 'danger'}-color); font-weight: bold;">${result.prediction}</td><td style="border: 1px solid var(--border-color); padding: 0.75rem;">${(result.confidence * 100).toFixed(1)}%</td></tr>`;
+                    });
+                    tableHtml += '</tbody></table>';
+                    resultsSection.innerHTML = tableHtml;
+                } else { // Handle single target
+                    const isActive = data.prediction === 'Active';
+                    resultsSection.innerHTML = `
+                        <div class="result-card ${isActive ? 'active' : 'inactive'}">
+                            <h3>Result for: ${data.smiles}</h3>
+                            <p>Target: <strong>${data.target_protein}</strong></p>
+                            <p>Predicted Bioactivity: <span style="color: var(--${isActive ? 'success' : 'danger'}-color); font-weight: bold;">${data.prediction}</span></p>
+                            <p>Confidence: ${(data.confidence * 100).toFixed(1)}%</p>
+                        </div>`;
+                }
+                addToHistory({ type: 'single', timestamp: new Date().toISOString(), result: data, smiles: smiles });
+                resultsSection.style.display = 'block';
+
+            } catch (error) {
+                resultsSection.innerHTML = `<div class="error-card"><h3>❌ Network Error</h3><p>Could not connect to the model. Is the server running?</p><p style="font-size: 0.8em; opacity: 0.7;">${error.message}</p></div>`;
+                resultsSection.style.display = 'block';
+            } finally {
+                buttonText.textContent = '⚡ Predict Activity';
+                spinner.style.display = 'none';
+                predictButton.disabled = false;
+            }
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            const fileNameDisplay = document.getElementById('file-name-display');
+            const textarea = document.getElementById('batch-smiles-input');
+            if (!file) {
+                fileNameDisplay.textContent = 'No file chosen';
+                return;
+            }
+            fileNameDisplay.textContent = file.name;
+            const reader = new FileReader();
+            const fileName = file.name.toLowerCase();
+            reader.onload = (e) => {
+                try {
+                    if (fileName.endsWith('.txt')) {
+                        textarea.value = e.target.result;
+                    } else if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        const smilesList = json.map(row => row[0]).filter(Boolean);
+                        textarea.value = smilesList.join('\n');
+                    } else { throw new Error('Unsupported file type.'); }
+                } catch (err) {
+                    alert('Error processing file: ' + err.message);
+                    fileNameDisplay.textContent = 'Upload failed';
+                    console.error(err);
+                }
+            };
+            if (fileName.endsWith('.txt')) { reader.readAsText(file); } 
+            else if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) { reader.readAsArrayBuffer(file); } 
+            else {
+                alert('Unsupported file type. Please upload a .txt, .xls, or .xlsx file.');
+                fileNameDisplay.textContent = 'No file chosen';
+            }
+        }
+
+
+        async function predictBatch() {
+            const batchSmilesInput = document.getElementById('batch-smiles-input');
+            const batchResultsSection = document.getElementById('batch-results-section');
+            const batchPredictButton = document.getElementById('batch-predict-btn');
+            const buttonText = batchPredictButton.querySelector('.btn-text');
+            const spinner = batchPredictButton.querySelector('.spinner');
+
+            const smilesLines = batchSmilesInput.value.trim().split('\n');
+            const smilesList = smilesLines.map(s => s.trim()).filter(s => s !== '');
+            const targetProtein = document.getElementById('batch-target-protein-select').value;
+            
+            if (smilesList.length === 0) { alert('Please enter at least one SMILES string.'); return; }
+            
+            buttonText.textContent = 'Predicting...';
+            spinner.style.display = 'inline-block';
+            batchPredictButton.disabled = true;
+            batchResultsSection.style.display = 'block';
+            document.getElementById('batch-results-content').innerHTML = '<p>Loading results...</p>';
+
+            try {
+                const payload = smilesList.map(smiles => ({ smiles, target_protein: targetProtein }));
+                const response = await fetch(BATCH_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: `Server error: ${response.status}` }));
+                    throw new Error(errorData.error || `Server error: ${response.status}`);
+                }
+
+                currentBatchResults = await response.json();
+                addToHistory({ type: 'batch', timestamp: new Date().toISOString(), target: targetProtein, results: currentBatchResults });
+                displayBatchPredictionResults();
+            } catch (error) {
+                 document.getElementById('batch-results-content').innerHTML = `<div class="error-card"><h3>❌ Network Error</h3><p>Could not connect to the model. Is the server running?</p><p style="font-size: 0.8em; opacity: 0.7;">${error.message}</p></div>`;
+            } finally {
+                buttonText.textContent = '📊 Batch Predict';
+                spinner.style.display = 'none';
+                batchPredictButton.disabled = false;
+            }
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.batch-controls button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`filter-${filter}`).classList.add('active');
+            displayBatchPredictionResults();
+        }
+
+        function setSort(sort) {
+            currentSort = sort;
+            displayBatchPredictionResults();
+        }
+
+        function displayBatchPredictionResults() {
+            const container = document.getElementById('batch-results-content');
+            if (currentBatchResults.length === 0) { return; }
+
+            let filteredResults = currentBatchResults.filter(item => {
+                if (currentFilter === 'all') return true;
+                if (currentFilter === 'active') return item.prediction === 'Active';
+                if (currentFilter === 'inactive') return item.prediction === 'Inactive';
+                if (currentFilter === 'error') return !!item.error;
+                return true;
+            });
+
+            filteredResults.sort((a, b) => {
+                if (currentSort === 'confidence-desc') return (b.confidence || 0) - (a.confidence || 0);
+                if (currentSort === 'confidence-asc') return (a.confidence || 0) - (b.confidence || 0);
+                return 0;
+            });
+
+            if (filteredResults.length === 0) {
+                container.innerHTML = '<p>No results match the current filter.</p>';
+                return;
+            }
+
+            container.innerHTML = `<div class="mini-result-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">` + filteredResults.map((item, index) => {
+                const canvasId = `batch-canvas-${index}`;
+                if (item.error) {
+                    return `<div class="mini-result-card error" style="border-left-color: var(--warning-color);"><p style="font-family: var(--font-body);">${item.smiles}</p><p style="color: var(--warning-color); font-weight: bold;">Error: ${item.error}</p></div>`;
+                }
+                const isActive = item.prediction === 'Active';
+                return `
+                    <div class="mini-result-card" style="border-left-color: var(--${isActive ? 'success' : 'danger'}-color);">
+                        <p style="font-family: var(--font-body);">${item.smiles}</p>
+                        <canvas id="${canvasId}" class="mini-canvas"></canvas>
+                        <p>Prediction: <strong style="color: var(--${isActive ? 'success' : 'danger'}-color);">${item.prediction}</strong></p>
+                        <p style="font-size: 0.8rem; opacity: 0.8;">Confidence: ${(item.confidence * 100).toFixed(1)}%</p>
+                    </div>
+                `;
+            }).join('') + `</div>`;
+            
+            setTimeout(() => {
+                filteredResults.forEach((item, index) => {
+                    if (!item.error) drawSmiles(item.smiles, `batch-canvas-${index}`, true);
+                });
+            }, 100);
+        }
+
+        function getHistory() {
+            return JSON.parse(localStorage.getItem('predictionHistory') || '[]');
+        }
+
+        function saveHistory(history) {
+            localStorage.setItem('predictionHistory', JSON.stringify(history));
+        }
+
+        function addToHistory(item) {
+            let history = getHistory();
+            history.unshift(item);
+            if (history.length > 50) history.pop();
+            saveHistory(history);
+        }
+        
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear your entire prediction history?')) {
+                localStorage.removeItem('predictionHistory');
+                renderHistory();
+            }
+        }
+        
+        function renderHistory() {
+            const history = getHistory();
+            const container = document.getElementById('history-content');
+            if (history.length === 0) {
+                container.innerHTML = '<p>Your prediction history will appear here.</p>';
+                return;
+            }
+            
+            container.innerHTML = history.map(item => {
+                let content = '';
+                const date = new Date(item.timestamp).toLocaleString();
+                if (item.type === 'single') {
+                    const smiles = item.smiles;
+                    const target = item.result.target_protein || (Array.isArray(item.result) ? "All Targets" : "N/A");
+                    const prediction = Array.isArray(item.result) ? `${item.result.filter(r => r.prediction === 'Active').length} Active` : item.result.prediction;
+                    content = `<div class="history-item-main"><p class="history-smiles">${smiles}</p><p class="history-meta">Single on ${target} &rarr; ${prediction}</p></div>`;
+                } else if (item.type === 'batch') {
+                    const activeCount = item.results.filter(r => r.prediction === 'Active').length;
+                    content = `<div class="history-item-main"><p class="history-smiles">${item.results.length} Compounds</p><p class="history-meta">Batch on ${item.target} &rarr; ${activeCount} Active</p></div>`;
+                }
+                return `<div class="history-item" onclick='rerunHistoryItem(${JSON.stringify(item)})'><p style="font-size:0.8rem; opacity: 0.7;">${date}</p>${content}</div>`;
+            }).join('');
+        }
+
+        function rerunHistoryItem(item) {
+            if (item.type === 'single') {
+                document.querySelector('.tab-link[onclick*="single-tab"]').click();
+                setExample(item.smiles, item.result.target_protein || "All Targets");
+                predictSingle();
+            } else if (item.type === 'batch') {
+                document.querySelector('.tab-link[onclick*="batch-tab"]').click();
+                const smilesList = item.results.map(r => r.smiles).join('\n');
+                document.getElementById('batch-smiles-input').value = smilesList;
+                document.getElementById('batch-target-protein-select').value = item.target;
+                predictBatch();
+            }
+        }
+    </script>
+</body>
+</html>
