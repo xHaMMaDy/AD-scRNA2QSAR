@@ -1,4 +1,4 @@
-# QSARify Platform Update: Version&nbsp;2.0 – **The&nbsp;Full&nbsp;Bench**
+## QSARify Platform Update: Version&nbsp;2.0 – **The&nbsp;Full&nbsp;Bench**
 
 Welcome to the largest update to **QSARify** yet! We’ve officially launched the QSARify platform, an end‑to‑end suite of tools for cheminformatics. This public release introduces our three core applications, a complete visual overhaul, and a robust architecture to accelerate your research from data collection to deployment.
 
