@@ -1,13 +1,39 @@
-### Version 1.2.0 - July 13, 2025
-- *Feature:* Added a brand new, dynamic changelog system! You're looking at it right now.
-- *Improvement:* The ModelBench module now caches processed data, speeding up the workflow.
-- *Fix:* Corrected a styling issue on mobile where the header title would wrap incorrectly.
+QSARify Platform Update: Version 2.0 - The Full Bench
 
-### Version 1.1.5 - June 28, 2025
-- *Update:* Updated the Alzheimer's Prediction model for ~BACE1~ to a new architecture, improving accuracy by 5%.
-- *Fix:* The Data Collection chart for Molecular Weight vs. LogP now handles null values gracefully without crashing.
-- *Docs:* Added more examples to the AD Predict Model page.
+Welcome to the largest update to QSARify yet! We've transformed our set of tools into a cohesive, end-to-end platform for cheminformatics. This update introduces two powerful new applications, a complete visual overhaul, and significant architectural improvements to accelerate your research from data collection to deployment.
 
-### Version 1.1.0 - June 15, 2025
-- *Feature:* The ModelBench "Evaluation" tab now includes a side-by-side model comparison table and an overlay of ROC curves.
-- *Behind the Scenes:* Optimized the backend API calls. A sample query is:
+Major New Features
+-----------------
+- Introduced Model Bench [🧪], a complete, step-by-step model training application. This new tool guides you through the entire QSAR workflow:
+  - Data Upload: Upload one or more datasets in .csv or .xlsx format.
+  - Feature Engineering: Interactively configure feature generation, including molecular fingerprints, physicochemical descriptors, and one-hot encoding for categorical data.
+  - Data Balancing: Handle class imbalance with built-in SMOTE-Tomek resampling.
+  - Model Training: Select from a wide array of machine learning models (from LogisticRegression to XGBoost) and configure their hyperparameters.
+  - Evaluation & Comparison: Train multiple models at once and compare them side-by-side with detailed classification reports, confusion matrices, and overlayed ROC curves.
+  - Hyperparameter Tuning: Run automated GridSearchCV to find the optimal parameters for your selected model.
+  - Export: Download your fully trained models as .pkl files and get detailed HTML reports of their performance.
+
+- Launched Model Playground [🧠], a dedicated tool to test your own custom-trained models.
+  - Upload & Predict: Upload any .pkl model file generated from the Model Bench or your own pipeline to start making predictions immediately.
+  - Dynamic Feature Detection: The playground intelligently inspects your uploaded model and creates UI elements (like dropdowns) if it requires specific inputs (e.g., protein targets).
+  - Single & Batch Modes: Test your model on individual SMILES strings or in large batches, just like the pre-built AD Predictor.
+
+General UI/UX Enhancements
+-------------------------
+- Unified Platform Design: All tools now share a cohesive, futuristic dark theme with a consistent "glass-card" style and a new animated background, creating a seamless experience across the entire platform.
+- New Navigation Header: A redesigned, fixed header provides easy access to all applications: Data Collection, Model Bench, and the Model Playground. It also includes quick links to the GitHub repository and the new changelog.
+- Interactive Changelog: A new changelog modal, accessible from the header of every page, fetches the latest updates directly from the project's GitHub repository to keep you informed.
+- Mobile Responsive Improvements: Enhanced navigation and layout for smaller screens, including a functional mobile menu.
+- Custom 404 Page: A polished "Page Not Found" page that matches the new theme and automatically redirects users to the main site has been implemented.
+
+Application-Specific Updates
+---------------------------
+- Data Collection (formerly ChEMBL Explorer): The tool has been renamed for clarity and fully integrated into the new platform design for a more modern and intuitive user experience. Its core functionality for querying ChEMBL remains as powerful as ever.
+- AD Predict Model (formerly the main prediction app): This tool, now at its own dedicated /ADPredictModel route, has been updated with the new UI. Its purpose is now focused specifically on providing predictions using the pre-built, multi-target Alzheimer's Disease model.
+
+Backend & Architectural Improvements
+-----------------------------------
+- Fully Integrated Flask Backend: The entire platform is now powered by a single, robust Python backend (app.py) that serves all applications and APIs.
+- Robust Training Pipeline: A powerful backend workflow has been built to handle everything from data processing and feature generation to concurrent model training and hyperparameter tuning.
+- Stateful Training Workflow: The Model Bench uses server-side session management to maintain your progress through the entire model-building pipeline, from data upload to final evaluation.
+- Modular Prediction Engine: The new prediction endpoint for the Model Playground is capable of loading arbitrary user-uploaded models and dynamically adapting to their feature requirements.
