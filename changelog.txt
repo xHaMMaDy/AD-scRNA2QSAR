@@ -1,0 +1,13 @@
+### Version 1.2.0 - July 13, 2025
+- *Feature:* Added a brand new, dynamic changelog system! You're looking at it right now.
+- *Improvement:* The ModelBench module now caches processed data, speeding up the workflow.
+- *Fix:* Corrected a styling issue on mobile where the header title would wrap incorrectly.
+
+### Version 1.1.5 - June 28, 2025
+- *Update:* Updated the Alzheimer's Prediction model for ~BACE1~ to a new architecture, improving accuracy by 5%.
+- *Fix:* The Data Collection chart for Molecular Weight vs. LogP now handles null values gracefully without crashing.
+- *Docs:* Added more examples to the AD Predict Model page.
+
+### Version 1.1.0 - June 15, 2025
+- *Feature:* The ModelBench "Evaluation" tab now includes a side-by-side model comparison table and an overlay of ROC curves.
+- *Behind the Scenes:* Optimized the backend API calls. A sample query is:
