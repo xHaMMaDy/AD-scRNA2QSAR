@@ -1,47 +1,36 @@
-## QSARify Platform Update: Version&nbsp;2.0 – **The&nbsp;Full&nbsp;Bench**
+### QSARify Platform Update: Version 2.0 – The Full Bench
 
-Welcome to the largest update to **QSARify** yet! We’ve officially launched the QSARify platform, an end‑to‑end suite of tools for cheminformatics. This public release introduces our three core applications, a complete visual overhaul, and a robust architecture to accelerate your research from data collection to deployment.
+Welcome to the largest update to *QSARify* yet! We’ve officially launched the QSARify platform, an end‑to‑end suite of tools for cheminformatics. This public release introduces our three core applications, a complete visual overhaul, and a robust architecture to accelerate your research from data collection to deployment.
 
----
+### Major New Features: The QSARify Application Suite
 
-## Major New Features: The QSARify Application Suite
-
-### Data Collection&nbsp;[🔬]
-
-- **Live Querying** — Fetch bioactivity data for any protein target using its **UniProt ID**.
-- **Interactive Visualizations** — Automatically generate plots for **Activity Distribution (pIC50)**, **Drug‑likeness**, and **Molecular Weight vs. LogP**.
+### Data Collection [🔬]
+- **Live Querying** — Fetch bioactivity data for any protein target using its *UniProt ID*.
+- **Interactive Visualizations** — Automatically generate plots for *Activity Distribution (pIC50)*, *Drug‑likeness*, and *Molecular Weight vs. LogP*.
 - **Data Exploration** — View and sort the complete, processed dataset in a detailed table and export your results to CSV.
 
-### Model Bench&nbsp;[🧪]
-
-- **Data Upload** — Upload one or more datasets in **.csv** or **.xlsx** format.
+### Model Bench [🧪]
+- **Data Upload** — Upload one or more datasets in *.csv* or *.xlsx* format.
 - **Feature Engineering** — Interactively configure feature generation, including molecular fingerprints, physicochemical descriptors, and one‑hot encoding.
 - **Model Training** — Select from a wide array of machine‑learning models (from *Logistic Regression* to *XGBoost*) and configure their hyper‑parameters.
 - **Evaluation & Comparison** — Train multiple models at once and compare them side‑by‑side with detailed reports, confusion matrices, and overlayed ROC curves.
-- **Hyper‑parameter Tuning** — Run automated **GridSearchCV** to find the optimal parameters for your selected model.
-- **Export** — Download fully trained models as **.pkl** files and receive detailed HTML performance reports.
+- **Hyper‑parameter Tuning** — Run automated *GridSearchCV* to find the optimal parameters for your selected model.
+- **Export** — Download fully trained models as *.pkl* files and receive detailed HTML performance reports.
 
-### Model Playground&nbsp;[🧠]
-
-- **Upload & Predict** — Upload any **.pkl** model file generated from the *Model Bench* (or your own pipeline) to start making predictions immediately.
+### Model Playground [🧠]
+- **Upload & Predict** — Upload any *.pkl* model file generated from the *Model Bench* (or your own pipeline) to start making predictions immediately.
 - **Dynamic Feature Detection** — The playground intelligently inspects your uploaded model and creates UI elements (such as dropdowns) when specific inputs are required (e.g., protein targets).
 - **Single & Batch Modes** — Test your model on individual SMILES strings or in large batches.
 
----
-
-## General UI/UX Enhancements
-
+### General UI/UX Enhancements
 - **Unified Platform Design** — All tools share a cohesive, futuristic dark theme with a consistent *glass‑card* style and a new animated background.
 - **New Navigation Header** — A fixed header provides quick access to all applications, plus links to the GitHub repository and this changelog.
 - **Interactive Changelog** — A new modal fetches the latest updates directly from GitHub.
 - **Mobile Responsive Improvements** — Enhanced navigation and layout for smaller screens, including a functional mobile menu.
 - **Custom 404 Page** — A polished page that matches the new theme and automatically redirects users to the main site.
 
----
-
-## Backend & Architectural Improvements
-
-- **Fully Integrated Flask Backend** — A single, robust **Python** backend (`app.py`) now serves all applications and APIs.
+### Backend & Architectural Improvements
+- **Fully Integrated Flask Backend** — A single, robust *Python* backend (`app.py`) now serves all applications and APIs.
 - **Robust Training Pipeline** — Handles everything from data processing and feature generation to concurrent model training and hyper‑parameter tuning.
 - **Stateful Training Workflow** — *Model Bench* uses server‑side session management to maintain your progress through the entire model‑building pipeline.
 - **Modular Prediction Engine** — The prediction endpoint in *Model Playground* can load arbitrary user‑uploaded models and adapt dynamically to their feature requirements.
